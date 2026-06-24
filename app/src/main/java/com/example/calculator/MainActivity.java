@@ -2,60 +2,135 @@ package com.example.calculator;
 
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText num1, num2;
-    Button btnAdd, btnSub, btnMul, btnDiv;
-    TextView result;
+    private TextView tvDisplay;
+
+    private String currentInput = "";
+    private String expression = "";
+
+    private double firstNumber = 0;
+    private String operator = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        num1 = findViewById(R.id.num1);
-        num2 = findViewById(R.id.num2);
+        tvDisplay = findViewById(R.id.tvDisplay);
 
-        btnAdd = findViewById(R.id.btnAdd);
-        btnSub = findViewById(R.id.btnSub);
-        btnMul = findViewById(R.id.btnMul);
-        btnDiv = findViewById(R.id.btnDiv);
+        int[] numberButtons = {
+                R.id.btn0, R.id.btn1, R.id.btn2, R.id.btn3,
+                R.id.btn4, R.id.btn5, R.id.btn6,
+                R.id.btn7, R.id.btn8, R.id.btn9
+        };
 
-        result = findViewById(R.id.result);
+        for (int id : numberButtons) {
+            Button btn = findViewById(id);
 
-        btnAdd.setOnClickListener(v -> calculate('+'));
-        btnSub.setOnClickListener(v -> calculate('-'));
-        btnMul.setOnClickListener(v -> calculate('*'));
-        btnDiv.setOnClickListener(v -> calculate('/'));
+            btn.setOnClickListener(v -> {
+                String value = btn.getText().toString();
+
+                currentInput += value;
+                expression += value;
+
+                tvDisplay.setText(expression);
+            });
+        }
+
+        findViewById(R.id.btnDot).setOnClickListener(v -> {
+            currentInput += ".";
+            expression += ".";
+            tvDisplay.setText(expression);
+        });
+
+        findViewById(R.id.btnAC).setOnClickListener(v -> {
+            currentInput = "";
+            expression = "";
+            firstNumber = 0;
+            operator = "";
+
+            tvDisplay.setText("0");
+        });
+
+        findViewById(R.id.btnAdd).setOnClickListener(v -> setOperator("+"));
+        findViewById(R.id.btnSub).setOnClickListener(v -> setOperator("-"));
+        findViewById(R.id.btnMul).setOnClickListener(v -> setOperator("*"));
+        findViewById(R.id.btnDiv).setOnClickListener(v -> setOperator("/"));
+
+        findViewById(R.id.btnEqual).setOnClickListener(v -> calculate());
     }
 
-    private void calculate(char op) {
+    private void setOperator(String op) {
 
-        double a = Double.parseDouble(num1.getText().toString());
-        double b = Double.parseDouble(num2.getText().toString());
+        if (!currentInput.isEmpty()) {
 
-        double ans = 0;
+            firstNumber = Double.parseDouble(currentInput);
+            operator = op;
 
-        switch (op) {
-            case '+':
-                ans = a + b;
+            if (op.equals("*"))
+                expression += "×";
+            else if (op.equals("/"))
+                expression += "÷";
+            else
+                expression += op;
+
+            tvDisplay.setText(expression);
+
+            currentInput = "";
+        }
+    }
+
+    private void calculate() {
+
+        if (currentInput.isEmpty())
+            return;
+
+        double secondNumber = Double.parseDouble(currentInput);
+        double result = 0;
+
+        switch (operator) {
+
+            case "+":
+                result = firstNumber + secondNumber;
                 break;
-            case '-':
-                ans = a - b;
+
+            case "-":
+                result = firstNumber - secondNumber;
                 break;
-            case '*':
-                ans = a * b;
+
+            case "*":
+                result = firstNumber * secondNumber;
                 break;
-            case '/':
-                ans = a / b;
+
+            case "/":
+
+                if (secondNumber == 0) {
+                    tvDisplay.setText("Error");
+                    currentInput = "";
+                    expression = "";
+                    return;
+                }
+
+                result = firstNumber / secondNumber;
                 break;
         }
 
-        result.setText("Result: " + ans);
+        String finalResult;
+
+        if (result == (long) result) {
+            finalResult = String.valueOf((long) result);
+        } else {
+            finalResult = String.valueOf(result);
+        }
+
+        tvDisplay.setText(finalResult);
+
+        currentInput = finalResult;
+        expression = finalResult;
     }
 }
